@@ -46,6 +46,7 @@
     <div class="enlace-copia"><span id="enlace-c"></span><button class="boton pequeno secundario" type="button" id="copiar-c">Copiar enlace</button></div>
     <h3>Pantalla del paciente</h3>
     <div class="enlace-copia"><span id="enlace-p"></span><button class="boton pequeno secundario" type="button" id="copiar-p">Copiar enlace</button></div>
+    <p class="compartir"><a class="boton pequeno secundario" id="wa-p" target="_blank" rel="noopener">Enviar por WhatsApp</a> <a class="boton pequeno secundario" id="mail-p">Enviar por correo</a></p>
     <div class="acciones"><a class="boton" id="ir-panel" href="#">Ir al panel y agregar medicamentos</a></div>
   </div>
 </main>
@@ -74,6 +75,9 @@ document.getElementById('form-registro').addEventListener('submit', function (e)
     document.getElementById('enlace-c').textContent = lc; document.getElementById('enlace-p').textContent = lp;
     document.getElementById('copiar-c').onclick = function () { CC.ui.copiar(lc, this); };
     document.getElementById('copiar-p').onclick = function () { CC.ui.copiar(lp, this); };
+    var np = d.pacienteNombre.trim();
+    document.getElementById('wa-p').href = CC.ui.enlaceWhatsApp(np, lp);
+    document.getElementById('mail-p').href = CC.ui.enlaceCorreo(np, lp);
     document.getElementById('ir-panel').href = 'panel.html?c=' + r.tokenCuidador;
     document.getElementById('vista-form').hidden = true; document.getElementById('vista-listo').hidden = false; window.scrollTo(0, 0);
   });
