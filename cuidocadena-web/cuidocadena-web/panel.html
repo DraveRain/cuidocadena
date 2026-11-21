@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel del cuidador · CuidoCadena</title>
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+<div id="cab"></div>
+<main class="seccion"><div class="contenedor">
+  <p class="etiqueta-seccion" id="etq">Panel del cuidador</p>
+  <h1 id="titulo">Cargando…</h1>
+  <div id="selector" class="campo" hidden style="max-width:360px"><label for="sel-paciente">Paciente</label><select id="sel-paciente"></select></div>
+  <p id="enlace-pac" class="reloj-paciente" hidden></p>
+  <div id="alertas-banner"></div>
+
+  <div class="pestanas" role="tablist" aria-label="Secciones del panel">
+    <button role="tab" id="t-resumen" aria-selected="true" data-p="resumen">Resumen de hoy</button>
+    <button role="tab" id="t-meds" aria-selected="false" data-p="meds">Medicamentos y horarios</button>
+    <button role="tab" id="t-hist" aria-selected="false" data-p="hist">Historial y alertas</button>
+  </div>
+
+  <section id="p-resumen" role="tabpanel" aria-labelledby="t-resumen">
+    <div class="tarjeta"><h2 id="fecha-hoy" style="font-size:1.3rem"></h2><ul class="lista-tomas" id="lista-hoy"></ul></div>
+    <p class="aviso-clinico" style="margin-top:20px">El paciente confirma desde su enlace. Si no puede hacerlo, puedes confirmar por él cuando la toma esté por confirmar.</p>
+  </section>
+
+  <section id="p-meds" role="tabpanel" aria-labelledby="t-meds" hidden>
+    <div class="cuadricula" style="grid-template-columns: 1fr 1fr; align-items:start">
+      <div id="lista-meds"></div>
+      <form class="tarjeta" id="form-med" novalidate>
+        <h2 style="font-size:1.3rem">Agregar medicamento</h2>
+        <div class="campo"><label for="medNombre">Nombre *</label><input id="medNombre" type="text" maxlength="80"><div class="error"></div></div>
+        <div class="campo"><label for="medDosis">Dosis *</label><input id="medDosis" type="text" maxlength="50" placeholder="1 tableta de 50 mg"><div class="error"></div></div>
+        <div class="dos-col">
+          <div class="campo"><label for="medHora">Hora de la toma *</label><input id="medHora" type="time"><div class="error"></div></div>
+          <div class="campo"><label for="medVentana">Ventana (min) *</label><input id="medVentana" type="number" min="5" max="240" value="30"><div class="ayuda">Tiempo para confirmar.</div><div class="error"></div></div>
+        </div>
+        <button class="boton" type="submit">Guardar medicamento</button>
+      </form>
+    </div>
+  </section>
+
+  <section id="p-hist" role="tabpanel" aria-labelledby="t-hist" hidden>
+    <div class="tarjeta">
+      <div class="dos-col" style="max-width:520px">
+        <div class="campo"><label for="h-desde">Desde</label><input id="h-desde" type="date"></div>
+        <div class="campo"><label for="h-hasta">Hasta</label><input id="h-hasta" type="date"></div>
+      </div>
+      <button class="boton pequeno" type="button" id="btn-filtrar">Ver historial</button>
+      <div id="hist-resultado"></div>
+    </div>
+    <div class="tarjeta" style="margin-top:20px"><h2 style="font-size:1.3rem">Alertas enviadas</h2><div id="tabla-alertas"></div></div>
+  </section>
+</div></main>
+<div id="pie"></div>
+<script src="js/config.js"></script><script src="js/logica.js"></script><script src="js/demo.js"></script><script src="js/api.js"></script><script src="js/ui.js"></script>
+<script>
+CC.ui.montar('panel');
+var ui = CC.ui, L = CC.logica, token = ui.param('c'), idPaciente = ui.param('i'), datos = null;
+if (token) localStorage.setItem('cc_enlace_panel', 'panel.html?c=' + token);
+
+/* Pestañas */
+document.querySelectorAll('.pestanas button').forEach(function (b) {
+  b.addEventListener('click', function () {
+    document.querySelectorAll('.pestanas button').forEach(function (x) { x.setAttribute('aria-selected', x === b); });
+    ['resumen', 'meds', 'hist'].forEach(function (p) { document.getElementById('p-' + p).hidden = (p !== b.dataset.p); });
+    if (b.dataset.p === 'hist') cargarHistorial();
+  });
+});
+
+function cargar() {
+  CC.api.datosPanel({ token: token, idPaciente: idPaciente }).then(function (r) {
+    if (!r.ok) { document.getElementById('titulo').textContent = 'Este enlace no es válido'; document.getElementById('etq').textContent = r.mensaje || ''; return; }
+    datos = r; idPaciente = r.paciente.id_paciente; pintar();
+  });
+}
+ui.alActualizar = cargar;
+
+function pintar() {
+  var r = datos, hoy = L.fechaISO(new Date(r.ahoraMs));
+  document.getElementById('etq').textContent = 'Hola, ' + r.cuidador.nombre.split(' ')[0];
+  document.getElementById('titulo').textContent = 'Cuidado de ' + r.paciente.nombre;
+  var sel = document.getElementById('selector');
+  if (r.pacientes.length > 1) {
+    sel.hidden = false; var s = document.getElementById('sel-paciente');
+    s.innerHTML = r.pacientes.map(function (p) { return '<option value="' + p.id_paciente + '"' + (p.id_paciente === idPaciente ? ' selected' : '') + '>' + ui.esc(p.nombre) + '</option>'; }).join('');
+    s.onchange = function () { idPaciente = s.value; cargar(); };
+  }
+  var lp = ui.base() + 'confirmar.html?p=' + r.paciente.token_paciente, ep = document.getElementById('enlace-pac');
+  ep.hidden = false; ep.innerHTML = 'Enlace del paciente: <a href="confirmar.html?p=' + r.paciente.token_paciente + '" target="_blank">abrir pantalla del paciente</a> · <button class="boton pequeno secundario" type="button" id="cp">Copiar enlace</button>';
+  document.getElementById('cp').onclick = function () { ui.copiar(lp, this); };
+
+  // alertas destacadas (omitidas de hoy)
+  var om = r.tomasHoy.filter(function (t) { return t.estado === 'omitida'; });
+  document.getElementById('alertas-banner').innerHTML = om.map(function (t) {
+    return '<div class="alerta-banner" role="alert"><span class="icono" aria-hidden="true">⚠</span><div><strong>Toma no confirmada</strong><br>' + ui.esc(r.paciente.nombre) + ' no confirmó ' + ui.esc(t.medicamento) + ' (' + ui.esc(t.dosis) + ') de las ' + ui.hora12(t.hora) + '.</div></div>';
+  }).join('');
+
+  // resumen
+  document.getElementById('fecha-hoy').textContent = 'Hoy, ' + ui.fechaLarga(hoy);
+  document.getElementById('lista-hoy').innerHTML = r.tomasHoy.length ? r.tomasHoy.map(function (t) {
+    var extra = t.estado === 'confirmada' ? ' · confirmada por ' + t.confirmado_por : '';
+    var btn = t.estado === 'pendiente' ? '<button class="boton pequeno" type="button" data-conf="' + t.id_horario + '">Confirmar por el paciente</button>' : '';
+    return '<li><div class="toma-info"><strong>' + ui.esc(t.medicamento) + '</strong><span>' + ui.esc(t.dosis) + ' · ' + ui.hora12(t.hora) + extra + '</span></div><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">' + btn + ui.estado(t.estado) + '</div></li>';
+  }).join('') : '<li>Todavía no hay medicamentos registrados. Agrégalos en la pestaña Medicamentos y horarios.</li>';
+  document.querySelectorAll('[data-conf]').forEach(function (b) {
+    b.onclick = function () { b.disabled = true; CC.api.confirmar({ token: token, idHorario: b.dataset.conf, quien: 'cuidador' }).then(function (c) { if (!c.ok) alert(c.mensaje); cargar(); }); };
+  });
+
+  // medicamentos
+  document.getElementById('lista-meds').innerHTML = r.medicamentos.length ? r.medicamentos.map(function (m) {
+    var chips = m.horarios.map(function (h) {
+      return '<span class="chip' + (h.activo ? '' : ' apagado') + '">' + ui.hora12(h.hora_programada) + ' · ' + h.ventana_min + ' min</span>';
+    }).join('');
+    var ctrl = m.horarios.map(function (h) {
+      return '<button class="boton pequeno secundario" type="button" data-h="' + h.id_horario + '" data-act="' + (h.activo ? 0 : 1) + '">' + (h.activo ? 'Desactivar ' : 'Activar ') + ui.hora12(h.hora_programada) + '</button>';
+    }).join(' ');
+    return '<div class="med' + (m.activo ? '' : ' inactivo') + '"><header><div><strong>' + ui.esc(m.nombre) + '</strong><br><span style="color:var(--texto-2)">' + ui.esc(m.dosis) + '</span></div>' +
+      '<button class="boton pequeno ' + (m.activo ? 'peligro' : 'secundario') + '" type="button" data-m="' + m.id_medicamento + '" data-act="' + (m.activo ? 0 : 1) + '">' + (m.activo ? 'Desactivar' : 'Reactivar') + '</button></header>' +
+      '<div class="horarios-med">' + chips + '</div><div style="display:flex;gap:8px;flex-wrap:wrap">' + ctrl + '</div>' +
+      '<form class="form-horario" data-med="' + m.id_medicamento + '" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:12px"><div class="campo" style="margin:0"><label>Otra hora<input type="time" required style="min-height:44px"></label></div><div class="campo" style="margin:0"><label>Ventana<input type="number" min="5" max="240" value="30" style="min-height:44px;width:90px"></label></div><button class="boton pequeno secundario" type="submit">Agregar horario</button></form></div>';
+  }).join('') : '<div class="tarjeta"><p>Aún no hay medicamentos. Agrega el primero con el formulario.</p></div>';
+  document.querySelectorAll('[data-m]').forEach(function (b) { b.onclick = function () { CC.api.cambiarActivo({ token: token, tipo: 'medicamento', id: b.dataset.m, activo: b.dataset.act === '1' }).then(cargar); }; });
+  document.querySelectorAll('[data-h]').forEach(function (b) { b.onclick = function () { CC.api.cambiarActivo({ token: token, tipo: 'horario', id: b.dataset.h, activo: b.dataset.act === '1' }).then(cargar); }; });
+  document.querySelectorAll('.form-horario').forEach(function (f) {
+    f.onsubmit = function (e) {
+      e.preventDefault(); var ins = f.querySelectorAll('input');
+      CC.api.agregarHorario({ token: token, idMedicamento: f.dataset.med, hora: ins[0].value, ventana: ins[1].value }).then(function (x) {
+        if (!x.ok) alert((x.errores && (x.errores.hora || x.errores.ventana)) || x.mensaje); else cargar();
+      });
+    };
+  });
+  cargarAlertas();
+}
+
+function cargarAlertas() {
+  var r = datos, mapa = {};
+  r.medicamentos.forEach(function (m) { m.horarios.forEach(function (h) { mapa[h.id_horario] = { m: m, h: h }; }); });
+  var filas = r.alertas.slice().sort(function (a, b) { return a.fecha_toma < b.fecha_toma ? 1 : -1; });
+  document.getElementById('tabla-alertas').innerHTML = filas.length ?
+    '<table class="datos"><thead><tr><th>Fecha</th><th>Toma</th><th>Estado del envío</th><th>Intentos</th></tr></thead><tbody>' + filas.map(function (a) {
+      var x = mapa[a.id_horario] || { m: { nombre: '-' }, h: { hora_programada: '00:00' } };
+      var estado = { enviada: '✔ Enviada', pendiente: '⏳ Pendiente', fallida: '⚠ Fallida' }[a.estado_envio];
+      return '<tr><td>' + a.fecha_toma + '</td><td>' + ui.esc(x.m.nombre) + ' · ' + ui.hora12(x.h.hora_programada) + '</td><td>' + estado + '</td><td>' + a.intentos + '</td></tr>';
+    }).join('') + '</tbody></table>' : '<p>Todavía no se ha enviado ninguna alerta.</p>';
+}
+
+function cargarHistorial() {
+  var desde = document.getElementById('h-desde').value, hasta = document.getElementById('h-hasta').value;
+  if (!desde) { desde = L.sumarDias(L.fechaISO(new Date(datos.ahoraMs)), -7); document.getElementById('h-desde').value = desde; }
+  if (!hasta) { hasta = L.fechaISO(new Date(datos.ahoraMs)); document.getElementById('h-hasta').value = hasta; }
+  CC.api.historial({ token: token, idPaciente: idPaciente, desde: desde, hasta: hasta }).then(function (r) {
+    var cont = document.getElementById('hist-resultado');
+    if (!r.ok) { cont.innerHTML = '<p>' + ui.esc(r.mensaje) + '</p>'; return; }
+    if (!r.filas.length) { cont.innerHTML = '<p style="margin-top:16px">No hay registros en ese rango de fechas.</p>'; return; }
+    var html = '', dia = '';
+    r.filas.forEach(function (f) {
+      if (f.fecha !== dia) { if (dia) html += '</ul>'; dia = f.fecha; html += '<div class="grupo-dia">' + ui.fechaLarga(dia) + '</div><ul class="lista-tomas">'; }
+      html += '<li><div class="toma-info"><strong>' + ui.esc(f.medicamento) + '</strong><span>' + ui.esc(f.dosis) + ' · ' + ui.hora12(f.hora) + ' · ' + ui.esc(f.detalle) + '</span></div>' + ui.estado(f.estado) + '</li>';
+    });
+    cont.innerHTML = html + '</ul>';
+  });
+}
+document.getElementById('btn-filtrar').onclick = cargarHistorial;
+
+document.getElementById('form-med').addEventListener('submit', function (e) {
+  e.preventDefault();
+  var d = { token: token, idPaciente: idPaciente, nombre: medNombre.value, dosis: medDosis.value, hora: medHora.value, ventana: medVentana.value };
+  var err = L.validarMedicamento(d);
+  [['medNombre', 'nombre'], ['medDosis', 'dosis'], ['medHora', 'hora'], ['medVentana', 'ventana']].forEach(function (p) { ui.errorCampo(p[0], err[p[1]]); });
+  if (Object.keys(err).length) return;
+  CC.api.guardarMedicamento(d).then(function (r) {
+    if (!r.ok) { alert(r.mensaje || 'Revisa los datos.'); return; }
+    e.target.reset(); medVentana.value = 30; cargar();
+  });
+});
+cargar();
+</script>
+</body>
+</html>

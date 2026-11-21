@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Registro · CuidoCadena</title>
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+<div id="cab"></div>
+<main class="seccion"><div class="contenedor angosto">
+  <div id="vista-form">
+    <p class="etiqueta-seccion">Registro</p>
+    <h1>Registrar al cuidador y al paciente</h1>
+    <p style="color:var(--texto-2)">Los campos con asterisco son obligatorios. Solo pedimos lo necesario: no guardamos diagnósticos ni documentos de identidad.</p>
+    <form id="form-registro" novalidate>
+      <fieldset>
+        <legend>Datos del cuidador</legend>
+        <div class="campo"><label for="cuidadorNombre">Nombre completo *</label><input id="cuidadorNombre" type="text" autocomplete="name" maxlength="80"><div class="error"></div></div>
+        <div class="campo"><label for="cuidadorCorreo">Correo electrónico *</label><input id="cuidadorCorreo" type="email" autocomplete="email" maxlength="100"><div class="ayuda">Aquí llegarán las alertas.</div><div class="error"></div></div>
+        <div class="campo"><label for="cuidadorTelefono">Teléfono</label><input id="cuidadorTelefono" type="tel" inputmode="numeric" autocomplete="tel" maxlength="15"><div class="ayuda">Solo números, sin espacios.</div><div class="error"></div></div>
+      </fieldset>
+      <fieldset>
+        <legend>Datos del paciente</legend>
+        <div class="dos-col">
+          <div class="campo"><label for="pacienteNombre">Nombre completo *</label><input id="pacienteNombre" type="text" maxlength="80"><div class="error"></div></div>
+          <div class="campo"><label for="pacienteEdad">Edad *</label><input id="pacienteEdad" type="number" inputmode="numeric" min="60" max="120"><div class="error"></div></div>
+        </div>
+      </fieldset>
+      <div class="campo" id="campo-consent">
+        <label class="consentimiento" for="consentimiento">
+          <input id="consentimiento" type="checkbox">
+          <span>Autorizo el tratamiento de los datos del paciente y del cuidador para confirmar tomas de medicamentos y enviar alertas, según el <a href="privacidad.html" target="_blank">aviso de privacidad</a>, conforme a la Ley 1581 de 2012. *</span>
+        </label>
+        <div class="error"></div>
+      </div>
+      <button class="boton" type="submit">Registrar</button>
+    </form>
+  </div>
+
+  <div id="vista-listo" hidden>
+    <div class="exito"><h2>Registro completado</h2><p id="listo-texto"></p></div>
+    <h2 style="margin-top:28px">Guarda estos dos enlaces</h2>
+    <p>No hay contraseñas: quien tenga el enlace puede entrar. Compártelos solo con quien corresponda.</p>
+    <h3>Panel del cuidador</h3>
+    <div class="enlace-copia"><span id="enlace-c"></span><button class="boton pequeno secundario" type="button" id="copiar-c">Copiar enlace</button></div>
+    <h3>Pantalla del paciente</h3>
+    <div class="enlace-copia"><span id="enlace-p"></span><button class="boton pequeno secundario" type="button" id="copiar-p">Copiar enlace</button></div>
+    <div class="acciones"><a class="boton" id="ir-panel" href="#">Ir al panel y agregar medicamentos</a></div>
+  </div>
+</main>
+<div id="pie"></div>
+<script src="js/config.js"></script><script src="js/logica.js"></script><script src="js/demo.js"></script><script src="js/api.js"></script><script src="js/ui.js"></script>
+<script>
+CC.ui.montar('registro');
+var ids = ['cuidadorNombre', 'cuidadorCorreo', 'cuidadorTelefono', 'pacienteNombre', 'pacienteEdad'];
+document.getElementById('form-registro').addEventListener('submit', function (e) {
+  e.preventDefault();
+  var d = {
+    cuidadorNombre: cuidadorNombre.value, cuidadorCorreo: cuidadorCorreo.value, cuidadorTelefono: cuidadorTelefono.value.trim(),
+    pacienteNombre: pacienteNombre.value, pacienteEdad: pacienteEdad.value, consentimiento: consentimiento.checked
+  };
+  var err = CC.logica.validarRegistro(d);
+  ids.concat(['consentimiento']).forEach(function (i) { CC.ui.errorCampo(i, err[i]); });
+  if (Object.keys(err).length) { var primero = document.querySelector('.con-error input'); if (primero) primero.focus(); return; }
+  var btn = e.target.querySelector('button[type=submit]'); btn.disabled = true; btn.textContent = 'Registrando…';
+  CC.api.registrar(d).then(function (r) {
+    btn.disabled = false; btn.textContent = 'Registrar';
+    if (!r.ok) { if (r.errores) ids.concat(['consentimiento']).forEach(function (i) { CC.ui.errorCampo(i, r.errores[i]); }); else alert(r.mensaje); return; }
+    var base = CC.ui.base();
+    var lc = base + 'panel.html?c=' + r.tokenCuidador, lp = base + 'confirmar.html?p=' + r.tokenPaciente;
+    localStorage.setItem('cc_enlace_panel', 'panel.html?c=' + r.tokenCuidador);
+    document.getElementById('listo-texto').textContent = 'Se registraron ' + d.pacienteNombre.trim() + ' y su cuidador, ' + d.cuidadorNombre.trim() + '.';
+    document.getElementById('enlace-c').textContent = lc; document.getElementById('enlace-p').textContent = lp;
+    document.getElementById('copiar-c').onclick = function () { CC.ui.copiar(lc, this); };
+    document.getElementById('copiar-p').onclick = function () { CC.ui.copiar(lp, this); };
+    document.getElementById('ir-panel').href = 'panel.html?c=' + r.tokenCuidador;
+    document.getElementById('vista-form').hidden = true; document.getElementById('vista-listo').hidden = false; window.scrollTo(0, 0);
+  });
+});
+</script>
+</body>
+</html>

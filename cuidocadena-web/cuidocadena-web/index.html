@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CuidoCadena · Confirma cada toma, avisa a tiempo</title>
+<meta name="description" content="CuidoCadena ayuda a confirmar que un adulto mayor tomó su medicamento y avisa a su cuidador cuando no lo hizo.">
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+<div id="cab"></div>
+<main>
+  <section class="hero"><div class="contenedor hero-grid">
+    <div>
+      <p class="etiqueta-seccion">Cuidado de medicamentos</p>
+      <h1>Que ninguna toma se pase sin que alguien lo sepa.</h1>
+      <p class="lead">El adulto mayor confirma su medicamento con un solo botón. Si no lo hace a tiempo, CuidoCadena le avisa por correo a su cuidador.</p>
+      <div class="acciones">
+        <a class="boton" href="registro.html">Registrar a un paciente</a>
+        <a class="boton secundario" href="#como-funciona">Ver cómo funciona</a>
+      </div>
+    </div>
+    <div class="hero-visual" aria-hidden="true">
+      <div class="mini-toma">
+        <div class="hora">Toma de las 8:00 a. m.</div>
+        <div class="nombre">Losartán</div>
+        <div>1 tableta de 50 mg</div>
+        <div class="mini-boton">Ya tomé mi medicamento</div>
+      </div>
+    </div>
+  </div></section>
+
+  <section class="seccion" id="como-funciona"><div class="contenedor">
+    <p class="etiqueta-seccion">Cómo funciona</p>
+    <h2>Tres pasos, sin contraseñas</h2>
+    <div class="cuadricula">
+      <div class="tarjeta"><div class="paso-num">1</div><h3>El cuidador registra</h3><p>Anota al paciente, sus medicamentos y la hora de cada toma. Recibe dos enlaces: uno para su panel y otro para el paciente.</p></div>
+      <div class="tarjeta"><div class="paso-num">2</div><h3>El paciente confirma</h3><p>Cuando llega la hora, abre su enlace y toca un solo botón grande: <strong>Ya tomé mi medicamento</strong>.</p></div>
+      <div class="tarjeta"><div class="paso-num">3</div><h3>Si no confirma, avisamos</h3><p>Pasado el tiempo definido sin confirmación, el sistema envía un correo al cuidador y deja el aviso en el historial.</p></div>
+    </div>
+  </div></section>
+
+  <section class="seccion"><div class="contenedor">
+    <p class="etiqueta-seccion">Pensado para todos</p>
+    <h2>Dos formas de usarlo</h2>
+    <div class="cuadricula">
+      <div class="tarjeta"><h3>Para el paciente</h3><p>Una sola pantalla, letra grande y un solo botón. No necesita crear cuenta ni recordar claves.</p></div>
+      <div class="tarjeta"><h3>Para el cuidador</h3><p>Un panel con las tomas de hoy, las alertas, el historial por fechas y la lista de medicamentos y horarios.</p></div>
+    </div>
+    <p class="aviso-clinico" style="margin-top:28px"><strong>Importante.</strong> CuidoCadena registra una confirmación declarada por la persona. No verifica que el medicamento se haya ingerido y no reemplaza el acompañamiento de un cuidador ni la indicación de un profesional de la salud.</p>
+  </div></section>
+</main>
+<div id="pie"></div>
+<script src="js/config.js"></script><script src="js/logica.js"></script><script src="js/demo.js"></script><script src="js/api.js"></script><script src="js/ui.js"></script>
+<script>CC.ui.montar('inicio');</script>
+</body>
+</html>

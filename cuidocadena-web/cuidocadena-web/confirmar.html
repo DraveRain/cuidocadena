@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Confirmar mi medicamento · CuidoCadena</title>
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/estilos.css">
+<style>
+  .pac-main { font-size: 1.15rem; }
+  .gran-medicamento { font-size: 2rem; font-weight: 700; margin: 4px 0; }
+  .gran-dosis { font-size: 1.35rem; color: var(--texto-2); margin-bottom: 6px; }
+  .gran-hora { font-size: 1.25rem; margin-bottom: 22px; }
+</style>
+</head>
+<body>
+<div id="cab"></div>
+<main class="seccion pac-main"><div class="contenedor angosto">
+  <p class="saludo" id="saludo"></p>
+  <h1 id="titulo">Cargando…</h1>
+  <div id="bloque-proxima" class="tarjeta" hidden></div>
+  <div id="bloque-exito" class="exito" hidden>
+    <h2>¡Muy bien! Quedó registrado.</h2>
+    <p>Gracias por confirmar. Tu cuidador ya puede verlo.</p>
+  </div>
+  <div id="bloque-ninguna" class="tarjeta" hidden><h2>No tienes tomas por confirmar</h2><p id="texto-ninguna"></p></div>
+  <h2 style="margin-top:32px">Tus tomas de hoy</h2>
+  <div class="tarjeta"><ul class="lista-tomas" id="lista"></ul></div>
+  <p class="aviso-clinico" style="margin-top:24px">Tu confirmación queda registrada. CuidoCadena no reemplaza a tu cuidador ni a tu médico.</p>
+</div></main>
+<div id="pie"></div>
+<script src="js/config.js"></script><script src="js/logica.js"></script><script src="js/demo.js"></script><script src="js/api.js"></script><script src="js/ui.js"></script>
+<script>
+CC.ui.montar('confirmar');
+var token = CC.ui.param('p'), ui = CC.ui;
+function pintar(r) {
+  if (!r.ok) { document.getElementById('titulo').textContent = 'Este enlace no es válido'; document.getElementById('lista').innerHTML = '<li>' + ui.esc(r.mensaje || '') + '</li>'; return; }
+  var hoy = CC.logica.fechaISO(new Date(r.ahoraMs));
+  document.getElementById('saludo').textContent = 'Hola, ' + r.paciente.nombre.split(' ')[0] + ' · ' + ui.fechaLarga(hoy);
+  var p = r.proxima, bp = document.getElementById('bloque-proxima'), bn = document.getElementById('bloque-ninguna');
+  if (p && p.estado === 'pendiente') {
+    document.getElementById('titulo').textContent = 'Es hora de tu medicamento';
+    bp.hidden = false; bn.hidden = true;
+    bp.innerHTML = '<div class="gran-medicamento">' + ui.esc(p.medicamento) + '</div><div class="gran-dosis">' + ui.esc(p.dosis) + '</div>' +
+      '<div class="gran-hora">Hora: <strong>' + ui.hora12(p.hora) + '</strong></div>' +
+      '<button class="boton boton-gigante" id="btn-tome" type="button"><span aria-hidden="true">✔</span> Ya tomé mi medicamento</button>';
+    document.getElementById('btn-tome').onclick = function () {
+      this.disabled = true; this.textContent = 'Guardando…';
+      CC.api.confirmar({ token: token, idHorario: p.id_horario, quien: 'paciente' }).then(function (c) {
+        if (c.ok) { document.getElementById('bloque-exito').hidden = false; window.scrollTo(0, 0); }
+        else alert(c.mensaje);
+        cargar();
+      });
+    };
+  } else {
+    bp.hidden = true; bn.hidden = false;
+    document.getElementById('titulo').textContent = 'Todo al día';
+    document.getElementById('texto-ninguna').textContent = p ? 'Tu próxima toma es ' + p.medicamento + ' a las ' + ui.hora12(p.hora) + '.' : 'Por hoy ya no tienes más tomas.';
+  }
+  document.getElementById('lista').innerHTML = r.tomasHoy.length ? r.tomasHoy.map(function (t) {
+    return '<li><div class="toma-info"><strong>' + ui.esc(t.medicamento) + '</strong><span>' + ui.esc(t.dosis) + ' · ' + ui.hora12(t.hora) + '</span></div>' + ui.estado(t.estado) + '</li>';
+  }).join('') : '<li>Hoy no tienes tomas programadas.</li>';
+}
+function cargar() { CC.api.vistaPaciente({ token: token }).then(pintar); }
+ui.alActualizar = cargar;
+cargar();
+</script>
+</body>
+</html>

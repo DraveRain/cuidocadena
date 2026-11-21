@@ -1,0 +1,87 @@
+[
+ [
+  "F01",
+  "CU01: registrar cuidador y paciente genera los dos enlaces de acceso",
+  "Aprobada"
+ ],
+ [
+  "F02",
+  "CU01: no se registra sin la autorización de datos",
+  "Aprobada"
+ ],
+ [
+  "F03",
+  "CU01: se rechaza un correo con formato inválido y una edad fuera de rango",
+  "Aprobada"
+ ],
+ [
+  "F04",
+  "CU02: agregar un medicamento con su horario lo muestra en el resumen del día",
+  "Aprobada"
+ ],
+ [
+  "F05",
+  "CU02: el formulario rechaza una hora o una ventana inválidas",
+  "Aprobada"
+ ],
+ [
+  "F06",
+  "CU03: el paciente confirma su toma con un solo botón y queda como tomada",
+  "Aprobada"
+ ],
+ [
+  "F07",
+  "CU03: no se acepta una segunda confirmación de la misma toma",
+  "Aprobada"
+ ],
+ [
+  "F08",
+  "CU03: el cuidador puede confirmar por el paciente desde su panel",
+  "Aprobada"
+ ],
+ [
+  "F09",
+  "CU04: sin confirmación, al terminar la ventana se crea la alerta y se envía el correo al cuidador",
+  "Aprobada"
+ ],
+ [
+  "F10",
+  "CU04: no se duplica la alerta de una misma toma aunque el verificador se ejecute varias veces",
+  "Aprobada"
+ ],
+ [
+  "F11",
+  "CU04: si falla el correo, reintenta y tras 3 intentos queda como fallida",
+  "Aprobada"
+ ],
+ [
+  "F12",
+  "CU05: el historial por rango de fechas muestra confirmaciones y la alerta de una toma omitida",
+  "Aprobada"
+ ],
+ [
+  "F13",
+  "RF10: desactivar un medicamento no borra su historial",
+  "Aprobada"
+ ],
+ [
+  "F14",
+  "Seguridad: un enlace inválido no muestra datos, y un cuidador no puede confirmar tomas de otro paciente",
+  "Aprobada"
+ ],
+ [
+  "F15",
+  "Usabilidad: el botón principal del paciente mide al menos 56 px de alto y la letra base 18 px",
+  "Aprobada"
+ ],
+ [
+  "F16",
+  "Usabilidad: en pantalla de celular (390 px) ninguna página tiene desplazamiento horizontal",
+  "Aprobada"
+ ],
+ [
+  "F17",
+  "Portada: se muestra el mensaje principal y el aviso de que no reemplaza el cuidado",
+  "Aprobada"
+ ]
+]
