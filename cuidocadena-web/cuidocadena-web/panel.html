@@ -89,7 +89,9 @@ function pintar() {
     s.onchange = function () { idPaciente = s.value; cargar(); };
   }
   var lp = ui.base() + 'confirmar.html?p=' + r.paciente.token_paciente, ep = document.getElementById('enlace-pac');
-  ep.hidden = false; ep.innerHTML = 'Enlace del paciente: <a href="confirmar.html?p=' + r.paciente.token_paciente + '" target="_blank">abrir pantalla del paciente</a> · <button class="boton pequeno secundario" type="button" id="cp">Copiar enlace</button>';
+  ep.hidden = false; ep.innerHTML = 'Enlace del paciente: <a href="confirmar.html?p=' + r.paciente.token_paciente + '" target="_blank">abrir pantalla del paciente</a> · <button class="boton pequeno secundario" type="button" id="cp">Copiar enlace</button> <a class="boton pequeno secundario" id="wa" target="_blank" rel="noopener">Enviar por WhatsApp</a> <a class="boton pequeno secundario" id="ml">Enviar por correo</a>';
+  document.getElementById("wa").href = ui.enlaceWhatsApp(r.paciente.nombre, lp);
+  document.getElementById("ml").href = ui.enlaceCorreo(r.paciente.nombre, lp);
   document.getElementById('cp').onclick = function () { ui.copiar(lp, this); };
 
   // alertas destacadas (omitidas de hoy)
