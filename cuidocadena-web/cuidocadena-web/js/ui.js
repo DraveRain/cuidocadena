@@ -98,6 +98,17 @@
     cont.classList.toggle('con-error', !!msg);
     var e = cont.querySelector('.error'); if (e) { e.textContent = msg || ''; }
   };
+
+  /* Enlaces para compartir el enlace del paciente por WhatsApp o correo (sin servidor) */
+  ui.msgPaciente = function (nombre, enlace) {
+    return 'Hola, este es tu enlace de CuidoCadena para confirmar tus medicamentos' + (nombre ? ', ' + nombre : '') +
+           '. Ábrelo cuando sea la hora de tu toma y toca el botón "Ya tomé mi medicamento": ' + enlace;
+  };
+  ui.enlaceWhatsApp = function (nombre, enlace) { return 'https://wa.me/?text=' + encodeURIComponent(ui.msgPaciente(nombre, enlace)); };
+  ui.enlaceCorreo = function (nombre, enlace) {
+    return 'mailto:?subject=' + encodeURIComponent('Tu enlace de CuidoCadena') + '&body=' + encodeURIComponent(ui.msgPaciente(nombre, enlace));
+  };
+
   ui.copiar = function (texto, boton) {
     var ok = function () { var t = boton.textContent; boton.textContent = 'Copiado ✔'; setTimeout(function () { boton.textContent = t; }, 1800); };
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texto).then(ok, ok); else ok();
